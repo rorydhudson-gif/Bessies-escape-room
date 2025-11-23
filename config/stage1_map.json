@@ -1,0 +1,56 @@
+{
+  "note": "Follow the setting sun.",
+  "failHints": [
+    "look for the colours and who you went with",
+    "the sun rises in the east and sets in the west"
+  ],
+  "padlockCode": "150907",
+  "pins": [
+    {
+      "name": "Kraków",
+      "lat": 50,
+      "lon": 15,
+      "type": "real",
+      "color": "red"
+    },
+    {
+      "name": "Florence",
+      "lat": 45.6,
+      "lon": 9.2,
+      "type": "real",
+      "color": "red"
+    },
+    {
+      "name": "Nice",
+      "lat": 45.6,
+      "lon": 6.97,
+      "type": "real",
+      "color": "red"
+    },
+    {
+      "name": "Morzine",
+      "lat": 47.3,
+      "lon": 7.1,
+      "type": "decoy",
+      "color": "blue"
+    },
+    {
+      "name": "Sevenum",
+      "lat": 51.6,
+      "lon": 5.26219,
+      "type": "decoy",
+      "color": "blue"
+    }
+  ],
+  "bounds": {
+    "minLon": -25,
+    "maxLon": 45,
+    "minLat": 34,
+    "maxLat": 72,
+    "padding": 10
+  },
+  "coordsDisplay": {
+    "format": "decimal",
+    "precision": "rounded"
+  }
+}

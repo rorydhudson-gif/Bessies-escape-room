@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Crossword Embed (Local)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0b0b0b;
+      --fg: #e8e8e8;
+      --muted: #b9b9b9;
+      --line: #2a2a2a;
+      --accent: #69c;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+    .wrap {
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    .bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .bar .hint {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .btn {
+      background: #111;
+      color: var(--fg);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    .btn:hover { border-color: #3a3a3a; }
+    .embed-area {
+      border: 1px dashed #333;
+      border-radius: 10px;
+      background: #101010;
+      overflow: auto;
+      padding: 10px;
+    }
+    .placeholder {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="bar">
+      <button id="btn-solved" class="btn">Mark Solved</button>
+      <div class="hint">
+</div>
+    </div>
+
+<!-- ==== STAGE 9: NEWSPAPER-STYLE CROSSWORD ==== -->
+<div id="crossword-wrap">
+  <div class="paper">
+    <header class="masthead">
+      <div class="masthead__title">Crossword</div>
+      <div class="masthead__kicker">Special Edition</div>
+    </header>
+
+    <div class="crossword">
+      <div class="grid" id="grid" aria-label="Crossword grid"></div>
+
+      <aside class="clues">
+        <h3>Clues</h3>
+        <ol>
+          <li><strong>1.</strong> Sport of my bet with Rudy — <em>4 letters</em></li>
+          <li><strong>2.</strong> Wedding reception — <em>7 letters</em></li>
+          <li><strong>3.</strong> Richie’s name if he was a girl — <em>6 letters</em></li>
+          <li><strong>4.</strong> Rory’s best mate — <em>5 letters</em></li>
+          <li><strong>5.</strong> Go-to takeaway — <em>5 letters</em></li>
+          <li><strong>6.</strong> Wedding venue — <em>6 letters</em></li>
+        </ol>
+        <p class="note">Tip: the <em>centre column</em> reveals a hidden word.</p>
+      </aside>
+    </div>
+
+    <footer class="footer">
+      <div class="status" id="status">Fill the puzzle to reveal the hidden word.</div>
+    </footer>
+  </div>
+</div>
+
+<style>
+  /* ===== Newspaper look & feel ===== */
+  :root{
+    --ink:#1b1a19;
+    --paper:#f6f1e6;
+    --paper-shadow:#e7dfcf;
+    --grid:#2d2c2a;
+    --cell:#ffffff;
+    --cell-border:#cfc8bb;
+    --accent:#b88a2b; /* gold for FRIARY highlight */
+  }
+
+  #crossword-wrap{
+    display:flex; justify-content:center; align-items:center;
+    padding:2rem; width:100%; box-sizing:border-box;
+    background:linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.02));
+    font-family: "Georgia", "Times New Roman", serif; color:var(--ink);
+  }
+  .paper{
+    width:min(980px, 92vw);
+    background: var(--paper);
+    border:1px solid var(--paper-shadow);
+    box-shadow: 0 14px 30px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.08);
+    position:relative;
+    padding:2rem 2rem 1.5rem;
+    /* subtle paper texture using gradients only */
+    background-image:
+      radial-gradient( circle at 30% 20%, rgba(0,0,0,.03), transparent 40%),
+      radial-gradient( circle at 70% 80%, rgba(0,0,0,.025), transparent 45%),
+      linear-gradient(transparent 97%, rgba(0,0,0,.05) 100%);
+    background-blend-mode:multiply;
+  }
+  .masthead{
+    display:flex; align-items:baseline; gap:1rem; margin-bottom:1.25rem;
+    border-bottom:2px solid var(--grid); padding-bottom:.5rem;
+  }
+  .masthead__title{ font-size:2.1rem; letter-spacing:.02em; font-weight:700; }
+  .masthead__kicker{ font-variant:small-caps; letter-spacing:.12em; opacity:.75; }
+
+  .crossword{ display:grid; grid-template-columns: 1fr minmax(240px, 0.75fr); gap:1.5rem; }
+  @media (max-width: 820px){ .crossword{ grid-template-columns:1fr; } }
+
+  .grid{
+    --rows:6; --cols:11;
+    display:grid; grid-template-columns:repeat(var(--cols), 1fr);
+    gap:2px; background:var(--cell-border); padding:2px;
+    box-shadow: inset 0 0 0 1px var(--grid);
+  }
+
+  .cell{
+    position:relative; width:100%; aspect-ratio:1 / 1;
+    background:var(--cell);
+    border:1px solid var(--cell-border);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .cell.blank{ background: #efe9dc; }
+  .cell input{
+    width:100%; height:100%; border:none; outline:none;
+    text-align:center; font-size:clamp(16px, 2.2vw, 26px);
+    font-weight:700; color:var(--ink);
+    background:transparent; text-transform:uppercase;
+    caret-color:transparent;
+  }
+
+  /* thin row/col labels feel like a newspaper grid (optional; off by default) */
+  .clues h3{ margin:0 0 .5rem 0; font-size:1.1rem; }
+  .clues ol{ margin:.25rem 0 0 1.2rem; padding:0; }
+  .clues li{ margin:.25rem 0; line-height:1.35; }
+  .note{ margin-top:.75rem; font-size:.95rem; opacity:.8; font-style:italic; }
+
+  .footer{ margin-top:1rem; display:flex; justify-content:space-between; align-items:center; }
+  .status{ font-size:.95rem; opacity:.85; }
+
+  /* Success styling */
+  .solved .cell[data-col="6"]{
+    box-shadow: inset 0 0 0 2px var(--accent), inset 0 0 0 100vmax rgba(184,138,43,0.08);
+    background:linear-gradient(180deg, rgba(184,138,43,0.10), rgba(184,138,43,0.02));
+  }
+  .solved .status{ color:var(--accent); font-weight:700; }
+</style>
+
+<script>
+(function(){
+  // Grid size
+  const ROWS = 6, COLS = 11, TARGET_COL = 6; // 1-based for human clarity
+
+  // Across words & starting columns so col 6 reads F R I A R Y
+  const rows = [
+    { word:'GOLF',   start:3 },  // F at col 6
+    { word:'BREWERY',start:5 },  // R at col 6
+    { word:'STEVIE', start:2 },  // I at col 6
+    { word:'JAMIE',  start:5 },  // A at col 6
+    { word:'CURRY',  start:4 },  // R at col 6
+    { word:'STOREY', start:1 },  // Y at col 6
+  ];
+
+  const hidden = 'FRIARY'; // down word
+
+  const gridEl = document.getElementById('grid');
+  const statusEl = document.getElementById('status');
+
+  // Build an empty model of the grid
+  const model = Array.from({length: ROWS}, () => Array(COLS).fill(null));
+
+  // Mark playable cells according to rows[] map
+  rows.forEach((r, rIdx) => {
+    const y = rIdx; // 0-based
+    for(let i=0;i<r.word.length;i++){
+      const x = (r.start - 1) + i; // 0-based col
+      model[y][x] = ''; // playable
+    }
+  });
+
+  // Render cells
+  for(let y=0;y<ROWS;y++){
+    for(let x=0;x<COLS;x++){
+      const cell = document.createElement('div');
+      cell.className = 'cell' + (model[y][x]===null ? ' blank' : '');
+      cell.dataset.row = (y+1);
+      cell.dataset.col = (x+1);
+
+      if(model[y][x]!==null){
+        const input = document.createElement('input');
+        input.setAttribute('maxlength','1');
+        input.setAttribute('aria-label', `Row ${y+1} Column ${x+1}`);
+        input.addEventListener('input', (e)=>{
+          e.target.value = (e.target.value||'').toUpperCase().replace(/[^A-Z]/g,'');
+          // move to next cell in the same row
+          if(e.target.value && x+1<COLS){
+            // find next playable cell in this row
+            for(let nx=x+1; nx<COLS; nx++){
+              if(model[y][nx]!==null){
+                gridEl.querySelector(`.cell[data-row="${y+1}"][data-col="${nx+1}"] input`)?.focus();
+                break;
+              }
+            }
+          }
+          checkSolved();
+        });
+        input.addEventListener('keydown',(e)=>{
+          if(e.key==='Backspace' && !e.target.value){
+            // move left to previous playable cell
+            for(let px=x-1; px>=0; px--){
+              if(model[y][px]!==null){
+                const prev = gridEl.querySelector(`.cell[data-row="${y+1}"][data-col="${px+1}"] input`);
+                if(prev){ prev.focus(); prev.value=''; }
+                break;
+              }
+            }
+          }
+        });
+        cell.appendChild(input);
+      }
+      gridEl.appendChild(cell);
+    }
+  }
+
+  // Autofocus first playable cell
+  requestAnimationFrame(()=>{
+    gridEl.querySelector('.cell:not(.blank) input')?.focus();
+  });
+
+  function getValueAt(y,x){
+    const input = gridEl.querySelector(`.cell[data-row="${y+1}"][data-col="${x+1}"] input`);
+    return input ? (input.value||'').toUpperCase() : null;
+  }
+
+  function checkSolved(){
+    // 1) Check across words exactly
+    for(let r=0;r<rows.length;r++){
+      const {word, start} = rows[r];
+      for(let i=0;i<word.length;i++){
+        const x = (start-1)+i;
+        if(getValueAt(r,x)!==word[i].toUpperCase()) {
+          gridEl.classList.remove('solved');
+          statusEl.textContent = 'Fill the puzzle to reveal the hidden word.';
+          return false;
+        }
+      }
+    }
+    // 2) Confirm centre column reads F R I A R Y
+    for(let r=0;r<ROWS;r++){
+      if(getValueAt(r, TARGET_COL-1)!==hidden[r]) {
+        gridEl.classList.remove('solved');
+        statusEl.textContent = 'Fill the puzzle to reveal the hidden word.';
+        return false;
+      }
+    }
+    // SOLVED
+    gridEl.classList.add('solved');
+    statusEl.textContent = `Solved — the hidden word is “${hidden}”.`;
+    if (typeof window.onCrosswordSolved === 'function') window.onCrosswordSolved();
+    return true;
+  }
+
+  // Expose a simple hook you can replace in your game
+  window.onCrosswordSolved = window.onCrosswordSolved || function(){
+    // Example: advance to final letter stage
+    // showView('stage11');
+    console.log('Crossword complete → trigger next stage.');
+  };
+})();
+</script>
+
+
+  <script>
+    // Test helper: allows manual completion without wiring up a crossword
+    document.getElementById('btn-solved').addEventListener('click', () => {
+      try {
+        window.parent && window.parent.postMessage('CROSSWORD_SOLVED', '*');
+      } catch (e) {}
+    });
+  </script>
+</body>
+</html>

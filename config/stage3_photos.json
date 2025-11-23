@@ -1,0 +1,50 @@
+{
+  "photos": [
+    {
+      "file": "photo1.jpg",
+      "letter": "n"
+    },
+    {
+      "file": "photo2.jpg",
+      "letter": "o"
+    },
+    {
+      "file": "photo3.jpg",
+      "letter": "1"
+    },
+    {
+      "file": "photo4.jpg",
+      "letter": "c"
+    },
+    {
+      "file": "photo5.jpg",
+      "letter": "h"
+    },
+    {
+      "file": "photo6.jpg",
+      "letter": "a"
+    },
+    {
+      "file": "photo7.jpg",
+      "letter": "s"
+    },
+    {
+      "file": "photo8.jpg",
+      "letter": "e"
+    }
+  ],
+  "orderCorrect": [
+    "photo1.jpg",
+    "photo2.jpg",
+    "photo3.jpg",
+    "photo4.jpg",
+    "photo5.jpg",
+    "photo6.jpg",
+    "photo7.jpg",
+    "photo8.jpg"
+  ],
+  "finalWord": "no1chase",
+  "hintText": "start where stories first unfold, end where time has turned to old",
+  "randomizeOnLoad": true,
+  "saveProgress": true
+}

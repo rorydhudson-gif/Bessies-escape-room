@@ -1,0 +1,18 @@
+{
+  "riddle": "When the list is done, take what lingers at the end.",
+  "items": [
+    "Bread",
+    "Fusilli",
+    "Basil",
+    "Ravioli",
+    "Egg",
+    "Lettuce",
+    "Lemon",
+    "Yogurt"
+  ],
+  "rule": "last_letter",
+  "finalWord": "diligent",
+  "style": {
+    "handwritten": true
+  }
+}

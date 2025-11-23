@@ -1,0 +1,30 @@
+{
+  "paragraphs": [
+    "Listen carefully now — everything you need lies within these lines. I’ve left a message, but its shape has been scattered among ordinary words. Read with care, and let intuition guide the order. What matters is not what you see first, but what connects when your heart aligns the pattern.",
+    "I have hidden what I could never quite explain before. Love is a tricky language, folding meaning where logic cannot reach. You might overlook it at first, yet if you move slowly through each sentence, you’ll find what I’ve placed there for you. So much depends on how you read between the lines — every syllable a thread, every pause a small breath of intent.",
+    "You don’t need to overthink it; the answer waits quietly, understand that discovery is sweeter when earned. When you gather the right words, you’ll know — the message will feel like something you’ve always known but never quite heard aloud."
+  ],
+  "targetSequence": [
+    "I",
+    "love",
+    "you",
+    "so",
+    "much",
+    "you",
+    "don't",
+    "understand"
+  ],
+  "normalize": {
+    "caseInsensitive": true,
+    "stripPunctuation": true,
+    "acceptCurlyApostrophes": true
+  },
+  "ui": {
+    "showHintLine": true,
+    "hintText": "Select the words that form the hidden message. Tap to add; tap again to remove.",
+    "minWordsBeforeSubmit": 3
+  },
+  "progressiveHints": {
+    "enabled": true
+  }
+}

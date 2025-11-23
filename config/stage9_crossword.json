@@ -1,0 +1,42 @@
+{
+  "hint": "The letters line up to tell what’s true.",
+  "style": "handwritten",
+
+  "embedUrl": "assets/crossword/local.html",
+  "messageSolved": "CROSSWORD_SOLVED",
+  "allowManual": true,
+
+  "clues": [
+    {
+      "number": 1,
+      "text": "Sport of my bet with Rudy",
+      "answer": "GOLF"
+    },
+    {
+      "number": 2,
+      "text": "Wedding reception",
+      "answer": "BREWERY"
+    },
+    {
+      "number": 3,
+      "text": "Richie’s name if he was a girl",
+      "answer": "STEVIE"
+    },
+    {
+      "number": 4,
+      "text": "Rory’s best mate",
+      "answer": "JAMIE"
+    },
+    {
+      "number": 5,
+      "text": "Go to takeaway",
+      "answer": "CURRY"
+    },
+    {
+      "number": 6,
+      "text": "Wedding venue",
+      "answer": "STOREY"
+    }
+  ],
+  "downWord": "FRIARY"
+}

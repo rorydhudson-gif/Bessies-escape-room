@@ -1,0 +1,40 @@
+
+:root{--line:#ffffff22;--text:#f2f2f2;--muted:#c9c9cf}
+html,body,#app{height:100%}body{margin:0;background:#000;color:var(--text);font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial}
+.room{position:fixed;inset:0;display:grid;place-items:center;background:#000}
+.room .bg{position:absolute;inset:0;object-fit:contain;width:100%;height:100%;z-index:1}
+.overlay{position:absolute;inset:0;z-index:10;pointer-events:none}
+.hotspot{position:absolute;/* left/top are top-left coordinates now */pointer-events:auto;z-index:11;border:2px solid transparent;border-radius:10px;background:transparent;cursor:pointer;min-width:12px;min-height:12px}
+.debug .hotspot{border-color:#ffff0080;background:#ffff0018}
+.view{position:fixed;inset:0;display:flex;flex-direction:column;background:#0b0b0e;z-index:100}.view.hidden{display:none}
+.toolbar{display:flex;gap:10px;align-items:center;padding:10px;border-bottom:1px solid var(--line);background:#0008;backdrop-filter:blur(6px)}
+.btn{background:#ffffff10;border:1px solid var(--line);color:#fff;padding:8px 12px;border-radius:10px;cursor:pointer}
+.main{flex:1;overflow:auto;padding:16px}
+.map-wrap{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0a0a0a}
+.maptip{position:absolute;pointer-events:none;background:#000c;border:1px solid var(--line);padding:6px 8px;border-radius:8px;opacity:0;transition:opacity .1s;white-space:nowrap}
+.maptip.show{opacity:1}
+.box .art{height:42vh;min-height:260px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#1b1b1b,#111);position:relative;box-shadow:0 20px 50px #0008}
+.sticky{position:absolute;left:16px;top:12px;width:240px;background:#ffefb3;color:#222;border-radius:8px;border:1px solid #0002;transform:rotate(-2deg);padding:8px 10px}
+.photos .tray{position:relative;height:55vh;min-height:360px;border:1px dashed var(--line);border-radius:14px;background:#0e0e0e;overflow:hidden}
+.polaroid{position:absolute;width:160px;height:120px;background:#fff;border-radius:8px;box-shadow:0 10px 30px #000a;display:flex;align-items:center;justify-content:center;user-select:none;touch-action:none}
+.polaroid .glow{position:absolute;right:8px;bottom:8px;font-size:22px;font-weight:900;color:#ffd28a;text-shadow:0 0 8px rgba(0,0,0,.6),0 0 14px #ffb45e;-webkit-text-stroke:1px rgba(0,0,0,.5);opacity:0;transition:opacity .2s;pointer-events:none;z-index:3}
+.frame{border:1px solid var(--line);border-radius:12px;overflow:hidden;min-height:50vh;background:#0b0b0b}
+.passimg{max-width:900px;border-radius:12px;border:1px solid var(--line)}
+.note{border:1px solid var(--line);border-radius:14px;background:#111;padding:16px;font-family:'Bradley Hand','Segoe Script','Comic Sans MS',cursive}
+.phone{display:grid;grid-template-rows:auto 1fr auto;gap:10px;min-height:70vh;border:1px solid var(--line);border-radius:20px;background:#0c0c0f;padding:14px}
+.kb{display:flex;flex-wrap:wrap;gap:8px}
+.kb button{font-size:22px;line-height:1;border-radius:10px;border:1px solid var(--line);background:#16161a;color:#fff;padding:10px 12px}
+.portraits{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.por{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0e0e0e}
+.por img{width:100%;height:220px;object-fit:cover}
+.grid{display:grid;gap:2px;background:#222;padding:2px}
+.cell{width:34px;height:34px;display:grid;place-items:center;background:#111;border:1px solid #222;color:#fff;font-weight:700;text-transform:uppercase}
+.fade-screen{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .5s ease;z-index:9998}
+.fade-screen.show{opacity:1;pointer-events:auto}
+.hint{color:var(--muted);margin:8px 0}
+.photos .slots{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-top:12px}
+.photos .slot{border:1px dashed var(--line);border-radius:8px;height:120px;display:grid;place-items:center;background:#0b0b0b}
+.bubble{min-height:40px;border:1px solid var(--line);border-radius:12px;padding:10px;background:#111}
+.word{cursor:pointer;padding:2px 4px;border-radius:4px}
+.word.selected{background:#ffd28a22;outline:1px solid #ffd28a66}
+.strip{min-height:24px;margin:8px 0;color:#ffd28a}
