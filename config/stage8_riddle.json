@@ -3,30 +3,30 @@
     {
       "file": "assets/portraits/Portrait1.jpg",
       "pos": {
-        "left": 9.41,
-        "top": 29.14,
-        "width": 22.49,
-        "height": 58.97
+        "left": 25.96,
+        "top": 31.42,
+        "width": 13.47,
+        "height": 51.94
       },
       "isTruthful": false
     },
     {
       "file": "assets/portraits/Portrait2.jpg",
       "pos": {
-        "left": 40.17,
-        "top": 28,
-        "width": 21.99,
-        "height": 61.46
+        "left": 44.33,
+        "top": 30.33,
+        "width": 12.47,
+        "height": 52.43
       },
       "isTruthful": false
     },
     {
       "file": "assets/portraits/Portrait3.jpg",
       "pos": {
-        "left": 70.44,
-        "top": 27.72,
-        "width": 20.49,
-        "height": 61.46
+        "left": 62.05,
+        "top": 30.61,
+        "width": 11.97,
+        "height": 53.94
       },
       "isTruthful": true
     }

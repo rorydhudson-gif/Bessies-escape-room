@@ -1,11 +1,11 @@
 
 // ===== INTRO HANDOFF (plays intro.mp4 then proceeds) =====
-async function playIntroThen(startMain) {
+async function playIntroThen(startMain, opts = {}) {
   const introSrc = 'assets/intro/intro.mp4';
-  // Play intro only once per session (memory + sessionStorage + localStorage)
-  try { if (window.__introPlayed === true) { startMain(); return; } } catch(e){}
-  try { if (sessionStorage.getItem('introDone') === '1') { startMain(); return; } } catch(e){}
-  try { if (localStorage.getItem('introDone') === '1') { startMain(); return; } } catch(e){}
+  // Play intro only once per session unless forced
+  try { if (!opts.force && window.__introPlayed === true) { startMain(); return; } } catch(e){}
+  try { if (!opts.force && sessionStorage.getItem('introDone') === '1') { startMain(); return; } } catch(e){}
+  try { if (!opts.force && localStorage.getItem('introDone') === '1') { startMain(); return; } } catch(e){}
   try { window.__introPlayed = true; } catch(e){}
   try {
     const head = await fetch(introSrc, { method: 'HEAD' });
@@ -17,14 +17,11 @@ async function playIntroThen(startMain) {
     startMain();
     return;
   }
-  // Ensure intro will not replay again even if the page is reloaded during playback
-  try { localStorage.setItem('introDone','1'); } catch(e){}
-  try { sessionStorage.setItem('introDone','1'); } catch(e){}
-  try { window.__introPlayed = true; } catch(e){}
+  // Do not mark introDone until playback ends; show overlay and play video now
   const overlay = document.createElement('div');
   Object.assign(overlay.style, { position:'fixed', inset:'0', background:'#000', display:'grid', placeItems:'center', zIndex:'99999' });
   const wrap = document.createElement('div'); wrap.style.position='relative'; wrap.style.width='min(90vw, 1280px)'; wrap.style.maxHeight='90vh'; overlay.appendChild(wrap);
-  const video = document.createElement('video'); video.src=introSrc; video.autoplay=true; video.muted=true; video.playsInline=true; video.controls=false;
+const video = document.createElement('video'); video.src=introSrc; video.autoplay=true; video.muted=true; video.playsInline=true; video.controls=false; video.preload='auto';
   Object.assign(video.style,{ width:'100%', height:'auto', borderRadius:'12px', boxShadow:'0 20px 60px rgba(0,0,0,.6)' });
   wrap.appendChild(video);
   const skip = document.createElement('button'); skip.textContent='Skip';
@@ -33,24 +30,129 @@ async function playIntroThen(startMain) {
   const tap = document.createElement('div'); tap.textContent='Tap to start';
   Object.assign(tap.style,{ position:'absolute', inset:'0', display:'grid', placeItems:'center', color:'#fff', fontSize:'18px', background:'transparent', pointerEvents:'none', opacity:'0', transition:'opacity .2s' });
   wrap.appendChild(tap); document.body.appendChild(overlay);
-  video.play().catch(()=>{ tap.style.opacity='1'; tap.style.pointerEvents='auto'; tap.onclick=()=>{ tap.style.pointerEvents='none'; tap.style.opacity='0'; video.play().catch(()=>{}); }; });
+  const shownAt = Date.now();
+  video.play().catch(()=>{ 
+    tap.style.opacity='1'; 
+    tap.style.pointerEvents='auto'; 
+    tap.onclick=()=>{ 
+      tap.style.pointerEvents='none'; 
+      tap.style.opacity='0'; 
+      video.play().catch(()=>{}); 
+    }; 
+  });
   video.addEventListener('ended', endIntro);
   function endIntro(){
-    overlay.remove();
-    try { localStorage.setItem('introDone','1'); } catch(e){}
-    try { sessionStorage.setItem('introDone','1'); } catch(e){}
-    try { window.__introPlayed = true; } catch(e){}
-    startMain();
+    const finish = () => {
+      try { localStorage.setItem('introDone','1'); } catch(e){}
+      try { sessionStorage.setItem('introDone','1'); } catch(e){}
+      try { window.__introPlayed = true; } catch(e){}
+      try { overlay.remove(); } catch(e){}
+      startMain();
+    };
+    // Ensure the intro is visibly on-screen for a minimum duration (e.g., 1.5s)
+    const minMs = 1500;
+    const dt = Date.now() - shownAt;
+    if (dt < minMs) setTimeout(finish, minMs - dt); else finish();
   }
 }
 
-// Debug param toggles hotspot boxes, and 'd' key toggles at runtime
+ // Debug param toggles hotspot boxes, and 'd' key toggles at runtime
 if (new URLSearchParams(location.search).has('debug')) document.body.classList.add('debug');
 document.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='d') document.body.classList.toggle('debug'); });
 
+// Festive splash screen shown before the intro/movie
+function showSplashThen(start){
+  const overlay = document.createElement('div');
+  Object.assign(overlay.style,{
+    position:'fixed', inset:'0', display:'grid', placeItems:'center',
+    zIndex:'100000',
+    background:'radial-gradient(120% 100% at 50% 0%, #13231f, #0b0b0e 60%)'
+  });
+
+  const inner = document.createElement('div');
+  Object.assign(inner.style,{ position:'relative', width:'min(92vw, 900px)', padding:'28px', textAlign:'center' });
+
+  const title = document.createElement('h1');
+  title.textContent = "Happy Christmas! Welcome to your escape room";
+  Object.assign(title.style,{
+    fontSize:'clamp(28px, 6vw, 56px)', margin:'0 0 10px',
+    color:'#fff', textShadow:'0 6px 28px rgba(0,0,0,.55)'
+  });
+  title.style.background='linear-gradient(90deg,#ffd28a,#fff)';
+  title.style.webkitBackgroundClip='text';
+  title.style.backgroundClip='text';
+  title.style.color='transparent';
+
+  const sub = document.createElement('div');
+  sub.textContent = 'Click Play to begin.';
+  Object.assign(sub.style,{ color:'#ccd2e0', margin:'6px 0 16px' });
+
+  const btn = document.createElement('button');
+  btn.className='btn';
+  btn.textContent='Play';
+  Object.assign(btn.style,{
+    fontSize:'18px', padding:'12px 18px', borderRadius:'12px',
+    background:'#1a2f2b', border:'1px solid #3f6', color:'#eafff6',
+    boxShadow:'0 10px 30px rgba(0,0,0,.4)', cursor:'pointer'
+  });
+
+  const hint = document.createElement('div');
+  hint.textContent='Tip: add ?debug to the URL or press D to toggle debug tools';
+  Object.assign(hint.style,{ color:'#8fb', opacity:'0.8', fontSize:'12px', marginTop:'10px' });
+
+  inner.appendChild(title);
+  inner.appendChild(sub);
+  inner.appendChild(btn);
+  inner.appendChild(hint);
+  overlay.appendChild(inner);
+
+  // simple snowflakes
+  const style = document.createElement('style');
+  style.textContent = `
+  @keyframes snowFall{ to{ transform: translateY(110vh) rotate(360deg); opacity: 0.9; } }
+  .flake{ position: fixed; top:-10vh; color:#fff; opacity:0.7; pointer-events:none; filter: drop-shadow(0 0 6px rgba(255,255,255,.35)); }
+  `;
+  document.head.appendChild(style);
+  for(let i=0;i<40;i++){
+    const f = document.createElement('div'); f.className='flake'; f.textContent='❄';
+    const left = Math.random()*100;
+    const size = 12 + Math.random()*18;
+    const dur = 6 + Math.random()*8;
+    const delay = Math.random()*-10;
+    Object.assign(f.style,{ left:left+'vw', fontSize:size+'px', animation:`snowFall ${dur}s linear ${delay}s infinite` });
+    overlay.appendChild(f);
+  }
+
+  document.body.appendChild(overlay);
+
+  // More reliable start handler: works with Play click, anywhere click, or Enter/Space
+  function go(){
+    try { overlay.remove(); } catch(e){}
+    if (typeof start === 'function') start();
+    try { window.removeEventListener('keydown', onKey); } catch(e){}
+    try { overlay.removeEventListener('click', onOverlayClick); } catch(e){}
+  }
+  function onKey(e){
+    const k = (e.key || '').toLowerCase();
+    if (k === 'enter' || k === ' ') {
+      e.preventDefault();
+      go();
+    }
+  }
+  function onOverlayClick(e){
+    // Allow clicking play button or any empty area/text to start
+    go();
+  }
+
+  btn.onclick = go;
+  overlay.addEventListener('click', onOverlayClick);
+  window.addEventListener('keydown', onKey);
+  try { setTimeout(()=>btn.focus(), 50); } catch(e){}
+}
+
 // ===== MAIN APP STARTS AFTER INTRO =====
 (async function(){
-  await new Promise(res => playIntroThen(res));
+  await new Promise(res => showSplashThen(()=>playIntroThen(res, { force: true })));
   const $ = s=>document.querySelector(s);
   const views={}; const state={ s1:false, s3:false, wiki:false, boarding:false, brief:false, phone:false, portraits:false, cross:false, finale:false };
   function persist(){ try{ localStorage.setItem('escapeState', JSON.stringify(state)); }catch(e){} }
@@ -98,6 +200,123 @@ document.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='d') docume
 
   function showHotspot(id, visible){ const el=document.querySelector(`.hotspot[data-id="${id}"]`); if(el) el.style.display = visible? '' : 'none'; }
 
+  // Debug helper: drag/resize room hotspots and copy their percentage coords
+  function enableHotspotEditor(room){
+    const host = room.overlay;
+    const panel=document.createElement('div');
+    Object.assign(panel.style,{ position:'absolute', left:'8px', top:'8px', background:'#000c', color:'#ddd', padding:'8px', border:'1px solid #ffffff33', borderRadius:'10px', display:'grid', gap:'6px', zIndex:1000, fontSize:'12px' });
+    const readout=document.createElement('div'); readout.textContent='Drag or resize a hotspot';
+    const copyBtn=document.createElement('button'); copyBtn.className='btn'; copyBtn.textContent='Copy all hotspots';
+    copyBtn.onclick=()=>{
+      const out=[...host.querySelectorAll('.hotspot')].map(el=>({
+        id: el.dataset.id,
+        x: +el.dataset.x, y: +el.dataset.y, w: +el.dataset.w, h: +el.dataset.h
+      }));
+      console.log('--- Room hotspots (paste into app.js):', JSON.stringify(out, null, 2));
+      try { navigator.clipboard.writeText(JSON.stringify(out, null, 2)); } catch(e){}
+    };
+    panel.appendChild(readout); panel.appendChild(copyBtn); host.appendChild(panel);
+
+    function updateStyle(el){
+      const r = room.img.getBoundingClientRect();
+      const x=+el.dataset.x, y=+el.dataset.y, w=+el.dataset.w, h=+el.dataset.h;
+      Object.assign(el.style,{
+        left:(x/100)*r.width+'px',
+        top:(y/100)*r.height+'px',
+        width:(w/100)*r.width+'px',
+        height:(h/100)*r.height+'px'
+      });
+    }
+
+    [...host.querySelectorAll('.hotspot')].forEach(el=>{
+      const label=document.createElement('div');
+      Object.assign(label.style,{ position:'absolute', left:'2px', top:'-18px', background:'#000b', color:'#fff', fontSize:'11px', padding:'2px 4px', borderRadius:'6px', border:'1px solid #ffffff33', pointerEvents:'none' });
+      el.appendChild(label);
+      function updateLabel(){
+        label.textContent = `${el.dataset.id} • x:${(+el.dataset.x).toFixed(2)} y:${(+el.dataset.y).toFixed(2)} w:${(+el.dataset.w).toFixed(2)} h:${(+el.dataset.h).toFixed(2)}`;
+        readout.textContent = label.textContent;
+      }
+      updateLabel();
+
+      const makeHandle=(cursor, ax, ay)=>{
+        const h=document.createElement('div');
+        Object.assign(h.style,{ position:'absolute', width:'12px', height:'12px', background:'#5cf', border:'1px solid #09f', borderRadius:'50%', zIndex:'2', cursor});
+        h.dataset.axis = ax+','+ay;
+        el.appendChild(h);
+        return h;
+      };
+      const tl = makeHandle('nwse-resize', -1, -1);
+      const tr = makeHandle('nesw-resize', +1, -1);
+      const bl = makeHandle('nesw-resize', -1, +1);
+      const br = makeHandle('nwse-resize', +1, +1);
+
+      function layoutHandles(){
+        tl.style.left='-6px'; tl.style.top='-6px';
+        tr.style.right='-6px'; tr.style.top='-6px';
+        bl.style.left='-6px'; bl.style.bottom='-6px';
+        br.style.right='-6px'; br.style.bottom='-6px';
+      }
+      layoutHandles();
+
+      let mode=null;
+      let start=null;
+      function onDown(e){
+        if(e.target!==el && e.target.parentNode===el && e.target.dataset.axis){
+          mode='resize';
+        } else {
+          mode='drag';
+        }
+        const rect = room.overlay.getBoundingClientRect();
+        start = {
+          rect,
+          mx: e.clientX, my: e.clientY,
+          x: +el.dataset.x, y:+el.dataset.y, w:+el.dataset.w, h:+el.dataset.h
+        };
+        e.preventDefault();
+      }
+      function constrain(val, min, max){ return Math.max(min, Math.min(max, val)); }
+      function onMove(e){
+        if(!start) return;
+        const dx = e.clientX - start.mx;
+        const dy = e.clientY - start.my;
+        const W = start.rect.width, H = start.rect.height;
+
+        if(mode==='drag'){
+          const nx = constrain(start.x + (dx/W)*100, 0, 100 - start.w);
+          const ny = constrain(start.y + (dy/H)*100, 0, 100 - start.h);
+          el.dataset.x = String(nx);
+          el.dataset.y = String(ny);
+        } else {
+          const ax = e.target.dataset.axis ? parseFloat(e.target.dataset.axis.split(',')[0]) : +1;
+          const ay = e.target.dataset.axis ? parseFloat(e.target.dataset.axis.split(',')[1]) : +1;
+
+          let w = start.w + (dx/W)*100*ax;
+          let h = start.h + (dy/H)*100*ay;
+          let x = start.x + (ax<0 ? (start.w - w) : 0);
+          let y = start.y + (ay<0 ? (start.h - h) : 0);
+
+          w = constrain(w, 1, 100);
+          h = constrain(h, 1, 100);
+          x = constrain(x, 0, 100 - w);
+          y = constrain(y, 0, 100 - h);
+
+          el.dataset.w = String(w);
+          el.dataset.h = String(h);
+          el.dataset.x = String(x);
+          el.dataset.y = String(y);
+        }
+        updateStyle(el);
+        updateLabel();
+        layoutHandles();
+      }
+      function onUp(){ start=null; mode=null; }
+
+      el.addEventListener('mousedown', onDown);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    });
+  }
+
   // Room + hotspots
   const room={ el:document.createElement('div'), img:new Image(), overlay:document.createElement('div'), hs:[],
     async init(){
@@ -105,19 +324,23 @@ document.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='d') docume
       this.el.appendChild(this.img); this.el.appendChild(this.overlay); document.body.appendChild(this.el);
       window.addEventListener('resize',()=>this.layout()); this.img.addEventListener('load',()=>this.layout());
       const H=[
-        {id:'map',x:45,y:32,w:16,h:19,on:()=>open('map')},
-        {id:'box',x:52,y:54,w:7,h:8,on:()=>open('box')},
-        {id:'photos',x:59,y:55,w:8,h:8,on:()=>open('photos')},
-        {id:'laptop',x:45,y:54,w:7,h:8,on:()=>open('laptop')},
-        {id:'brief',x:59,y:55,w:8,h:8,on:()=>open('briefcase')},
-        {id:'phone',x:30,y:78,w:7,h:7,on:()=>open('phone')},
-        {id:'portraits',x:65,y:44,w:16,h:8,on:()=>open('portraits')},
-        {id:'door',x:88,y:40,w:8,h:30,on:()=>{ if(state.finale){ FX.play('door'); open('end'); } else toast('Still locked…'); }},
+        {id:'map',x:47,y:32.67,w:10.6,h:18.5,on:()=>open('map')},
+        {id:'box',x:50.5,y:58,w:6,h:6.7,on:()=>open('box')},
+        {id:'laptop',x:44.5,y:58,w:6,h:6,on:()=>open('laptop')},
+        {id:'brief',x:56.7,y:58,w:6,h:6.7,on:()=>open('briefcase')},
+        {id:'phone',x:34,y:89.5,w:7,h:7,on:()=>open('phone')},
+        {id:'portraits',x:61,y:43,w:10,h:8,on:()=>open('portraits')},
+        {id:'door',x:74.5,y:40.8,w:8,h:30,on:()=>{ if(state.finale){ FX.play('door'); open('end'); } else toast('Still locked…'); }},
       ];
       this.hs = H.map(h=>{ const b=document.createElement('button'); b.className='hotspot'; Object.assign(b.dataset,{id:h.id,x:h.x,y:h.y,w:h.w,h:h.h}); b.onclick=h.on; this.overlay.appendChild(b); return b; });
       this.layout(); 
-      // Locked box should always be clickable from the start
+      // Always display primary hotspots; progression is enforced within each stage
       showHotspot('box', true);
+      showHotspot('laptop', true);
+      showHotspot('phone', true);
+      showHotspot('portraits', true);
+      // Enable in-editor hotspot dragging/resizing when in debug mode
+      if (document.body.classList.contains('debug')) try { enableHotspotEditor(this); } catch(e){}
       // Boarding pass hotspot removed (boarding now shown on laptop after Wikipedia)
     },
     layout(){ const r=this.img.getBoundingClientRect(); Object.assign(this.overlay.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});
@@ -438,17 +661,22 @@ document.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='d') docume
     const hint=document.createElement('div'); hint.className='hint'; hint.textContent=s3.hintText;
     const tray=document.createElement('div'); tray.className='tray';
     const slots=document.createElement('div'); slots.className='slots';
-    // Layout: hint on top, slots in middle, tray pinned to bottom
-    Object.assign(wrap.style, { display:'grid', gridTemplateRows:'auto 1fr minmax(16vh, 24vh)', gap:'8px', minHeight:'calc(100vh - 120px)' });
-    Object.assign(tray.style, { position:'relative', height:'clamp(16vh, 22vh, 26vh)', background:'transparent', overflow:'hidden' });
+    // Layout: hint on top, slots in middle, tray pinned to bottom (use CSS sizing)
+    Object.assign(wrap.style, { display:'grid', gridTemplateRows:'auto 1fr auto', gap:'6px' });
+    Object.assign(tray.style, { });
     Object.assign(slots.style, {
       display:'grid',
-      gridTemplateColumns:`repeat(${s3.orderCorrect.length}, minmax(120px, 1fr))`,
-      gap:'12px',
+      gridTemplateColumns:`repeat(${s3.orderCorrect.length}, minmax(0, 1fr))`,
+      gap:'4px',
       alignContent:'start',
       justifyItems:'stretch'
     });
-    for(let i=0;i<s3.orderCorrect.length;i++){ const s=document.createElement('div'); s.className='slot'; slots.appendChild(s); }
+    for(let i=0;i<s3.orderCorrect.length;i++){
+      const s=document.createElement('div'); s.className='slot';
+      // Slot styling via CSS (.photos .slot); no inline overrides
+      Object.assign(s.style,{});
+      slots.appendChild(s);
+    }
     wrap.appendChild(hint); wrap.appendChild(slots); wrap.appendChild(tray); 
     // Controls row (Reset + Final word + Continue)
     const controls=document.createElement('div'); controls.style.display='flex'; controls.style.gap='8px'; controls.style.alignItems='center';
@@ -479,7 +707,7 @@ document.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='d') docume
     const letters=new Map(s3.photos.map(p=>[p.file,p.letter])); const correct=s3.orderCorrect; const placed=new Array(correct.length).fill(null);
     function spawn(file){
       const p=document.createElement('div'); p.className='polaroid'; p.draggable=true;
-      const img=new Image(); img.src='assets/photos/'+file;
+      const img=new Image(); img.src='assets/photos/'+file; img.draggable=false;
       Object.assign(img.style,{ maxWidth:'100%', maxHeight:'100%', objectFit:'cover' });
       p.appendChild(img);
       const glow=document.createElement('div'); glow.className='glow'; 
@@ -506,27 +734,10 @@ document.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='d') docume
       // Recompute tray layout to size and space items responsively
       layoutTray();
     }
-    // Layout helper to evenly distribute photos in the tray (bottom area)
-    function layoutTray(){
-      const arr=[...tray.querySelectorAll('.polaroid')];
-      const N = Math.max(arr.length, s3.photos.length || 8);
-      const r = tray.getBoundingClientRect();
-      const gap = 8;
-      const avail = Math.max(0, r.width - (N * gap));
-      const pw = Math.max(80, Math.min(140, Math.floor(avail / N))); // clamp width so all 8 fit
-      const ph = Math.floor(pw * 1.25); // portrait ratio
-      arr.forEach((p,idx)=>{
-        const leftPct = ((idx + 0.5) / N) * 100;
-        p.style.width = pw + 'px';
-        p.style.height = ph + 'px';
-        p.style.left = leftPct + '%';
-        p.style.top = '50%';
-        p.style.transform = `translate(-50%,-50%) rotate(${(Math.random()*10-5).toFixed(1)}deg)`;
-        p.style.zIndex = '2';
-      });
-    }
+    // Layout helper (no-op): rely on original CSS sizes for tray/polaroids
+    function layoutTray(){ /* use CSS sizes; no dynamic layout */ }
     window.addEventListener('resize', layoutTray);
-    photosV.onshow = ()=>{ try { layoutTray(); } catch(e){} };
+    photosV.onshow = ()=>{};
 
     // Allow dragging photos back out of slots into the tray
     tray.addEventListener('dragover', e => e.preventDefault());
@@ -548,12 +759,10 @@ document.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='d') docume
       Object.assign(pol.style, { position: 'absolute', width: '', height: '' });
       const glow = pol.querySelector('.glow'); if (glow) glow.style.opacity = 0;
       const im = pol.querySelector('img'); if (im) Object.assign(im.style, { width:'', height:'', maxWidth:'100%', maxHeight:'100%', objectFit:'cover' });
-
-      layoutTray();
     });
 
     slots.querySelectorAll('.slot').forEach((slot,i)=>{
-      slot.addEventListener('dragover',e=>e.preventDefault());
+      slot.addEventListener('dragover',e=>{ e.preventDefault(); try{ e.dataTransfer.dropEffect='move'; }catch(_){ /* no-op */ } });
       slot.addEventListener('drop',e=>{
         e.preventDefault();
         const file=e.dataTransfer.getData('text/plain');
@@ -574,7 +783,6 @@ document.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='d') docume
           tray.appendChild(existing);
           Object.assign(existing.style,{ position:'absolute', width:'', height:'' });
           const gPrev = existing.querySelector('.glow'); if (gPrev) gPrev.style.opacity = 0;
-          layoutTray();
         }
 
         // Snap the new photo into the slot; keep it positioned relative so the glow anchors to the photo
@@ -592,6 +800,7 @@ document.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='d') docume
                 // If all positions are correct, reveal final word and enable continue (do not auto-leave)
         if(placed.every((f,idx)=>f===correct[idx])){
           state.s3=true; persist();
+          try { showHotspot('laptop', true); } catch(e){}
           FX.play('success');
           finalText.textContent = String(s3.finalWord || '').toUpperCase();
           finalText.style.opacity = '1';
@@ -637,9 +846,83 @@ Object.assign(screen.style,{
   overflow:'hidden'
 });
 setScreenRect(scr);
-// Debug: show overlay bounds to help alignment
+ // Debug: show overlay bounds to help alignment + live rect calibrator (Laptop/Wiki)
 if (document.body.classList.contains('debug')) {
   screen.style.outline = '1px dashed rgba(255,255,0,.6)';
+
+  const panelL = document.createElement('div');
+  Object.assign(panelL.style, {
+    position:'absolute', left:'8px', top:'8px', zIndex:20,
+    background:'#000c', border:'1px solid #ffffff33', padding:'8px',
+    borderRadius:'10px', display:'grid', gap:'6px', color:'#ddd', fontSize:'12px'
+  });
+
+  const rectScr = {
+    left: scr.left ?? 18.3, top: scr.top ?? 30, width: scr.width ?? 43, height: scr.height ?? 36
+  };
+  const rectWiki = {
+    left: wikiScr.left ?? 5, top: wikiScr.top ?? 5, width: wikiScr.width ?? 90, height: wikiScr.height ?? 80
+  };
+  let mode = 'laptop'; // 'laptop' | 'wiki'
+  function applyRectL(){
+    const r = (mode==='laptop') ? rectScr : rectWiki;
+    screen.style.left   = pct(r.left);
+    screen.style.top    = pct(r.top);
+    screen.style.width  = pct(r.width);
+    screen.style.height = pct(r.height);
+    updateReadoutL();
+  }
+  function pct(v){ return (String(v).endsWith('%') ? String(v) : String(v) + '%'); }
+  function updateReadoutL(){
+    const r = (mode==='laptop') ? rectScr : rectWiki;
+    readoutL.textContent = `[${mode==='laptop'?'Laptop':'Wiki'}] L:${(+r.left).toFixed(1)} T:${(+r.top).toFixed(1)} W:${(+r.width).toFixed(1)} H:${(+r.height).toFixed(1)}`;
+  }
+  const readoutL = document.createElement('div');
+
+  const rowMode = document.createElement('div'); rowMode.style.display='flex'; rowMode.style.gap='6px'; rowMode.style.alignItems='center';
+  const tog = document.createElement('button'); tog.className='btn'; tog.textContent='Edit: Laptop';
+  tog.onclick=()=>{ mode = (mode==='laptop') ? 'wiki' : 'laptop'; tog.textContent = 'Edit: ' + (mode==='laptop'?'Laptop':'Wiki'); applyRectL(); };
+  rowMode.appendChild(tog);
+
+  function mkRowL(label, key, delta=0.5){
+    const row = document.createElement('div');
+    row.style.display='flex'; row.style.gap='4px'; row.style.alignItems='center';
+    const lab = document.createElement('span'); lab.textContent = label;
+    const minus = document.createElement('button'); minus.className='btn'; minus.textContent='-';
+    const plus = document.createElement('button'); plus.className='btn'; plus.textContent='+';
+    minus.onclick=()=>{ const r = (mode==='laptop')?rectScr:rectWiki; r[key] = (+r[key]||0) - delta; applyRectL(); };
+    plus.onclick =()=>{ const r = (mode==='laptop')?rectScr:rectWiki; r[key] = (+r[key]||0) + delta; applyRectL(); };
+    row.appendChild(lab); row.appendChild(minus); row.appendChild(plus);
+    return row;
+  }
+
+  const copyBtn = document.createElement('button'); copyBtn.className='btn'; copyBtn.textContent='Copy current rect';
+  copyBtn.onclick=()=>{
+    const r = (mode==='laptop')? rectScr : rectWiki;
+    const key = (mode==='laptop')? 'screen' : 'wikiScreen';
+    const txt = JSON.stringify(r);
+    console.log(`config/stage4_wikipedia.json → "${key}": ${txt}`);
+    try { navigator.clipboard.writeText(`"${key}": ${txt}`); toast('Rect copied to clipboard'); } catch(e){}
+  };
+
+  const copyBoth = document.createElement('button'); copyBoth.className='btn'; copyBoth.textContent='Copy both rects';
+  copyBoth.onclick=()=>{
+    const out = { screen: rectScr, wikiScreen: rectWiki };
+    const txt = JSON.stringify(out, null, 2);
+    console.log('config/stage4_wikipedia.json →', txt);
+    try { navigator.clipboard.writeText(txt); toast('Both rects copied'); } catch(e){}
+  };
+
+  panelL.appendChild(readoutL);
+  panelL.appendChild(rowMode);
+  panelL.appendChild(mkRowL('Left','left'));
+  panelL.appendChild(mkRowL('Top','top'));
+  panelL.appendChild(mkRowL('Width','width'));
+  panelL.appendChild(mkRowL('Height','height'));
+  panelL.appendChild(copyBtn);
+  panelL.appendChild(copyBoth);
+  shell.appendChild(panelL);
+  applyRectL();
 }
 shell.appendChild(screen);
 wrap.appendChild(shell);
@@ -1012,7 +1295,7 @@ Object.assign(page.style,{
     const row=document.createElement('div'); row.style.marginTop='12px';
     row.innerHTML=`<input id="ans" placeholder="Answer" style="text-transform:uppercase;padding:10px;border-radius:10px;border:1px solid var(--line);background:#111;color:#fff"/> <button class="btn" id="ok">Submit</button>`;
     shopV.body.appendChild(note); shopV.body.appendChild(row);
-    row.querySelector('#ok').onclick=()=>{ const v=(row.querySelector('#ans').value||'').trim().toLowerCase(); if(v===String(s6.finalWord||'').toLowerCase()){ state.phoneReady=true; persist(); toast('✔ Notebook solved — phone unlocked.'); FX.play('success'); open('phone'); } else { toast('Not quite.'); FX.play('fail'); } };
+    row.querySelector('#ok').onclick=()=>{ const v=(row.querySelector('#ans').value||'').trim().toLowerCase(); if(v===String(s6.finalWord||'').toLowerCase()){ state.phoneReady=true; persist(); try { showHotspot('phone', true); } catch(e){} toast('✔ Notebook solved — phone unlocked.'); FX.play('success'); open('phone'); } else { toast('Not quite.'); FX.play('fail'); } };
   })();
 
   // Stage 7 Phone (emoji sequence)
@@ -1024,8 +1307,9 @@ Object.assign(page.style,{
     wrapP.style.placeItems='center';
     const shellP=document.createElement('div');
     shellP.style.position='relative';
-    shellP.style.width='min(65vw,480px)';
-    shellP.style.maxWidth='480px';
+    // Make phone roughly twice as big
+    shellP.style.width='min(60vw, 560px, 56vh)';
+    shellP.style.maxWidth='560px';
     const artP=new Image();
     artP.src='assets/phone/phone.png';
     artP.alt='phone';
@@ -1144,8 +1428,8 @@ Object.assign(passWrap.style,{
       const w = screenP.clientWidth || 320;
       const h = screenP.clientHeight || 480;
       const base = Math.min(w,h);
-      const fs = Math.round(Math.max(18, Math.min(28, base*0.08)));
-      const pad = Math.round(Math.max(6, Math.min(10, base*0.025)));
+      const fs = Math.round(Math.max(14, Math.min(22, base*0.06)));
+      const pad = Math.round(Math.max(4, Math.min(8, base*0.018)));
       kb.querySelectorAll('button').forEach(btn=>{
         btn.style.fontSize = fs + 'px';
         btn.style.padding = pad + 'px';
@@ -1160,6 +1444,7 @@ Object.assign(passWrap.style,{
       const ok=chosen.join(',')===(s7.sequence||[]).join(','); 
       if(ok){ 
         state.phone=true; persist(); 
+        showHotspot('portraits', true);
         toast('✔ Correct — text thread unlocked.'); FX.play('success'); 
         // Show the chat riddle view inside the phone
         try { videoWrap.style.display='none'; puzzleWrap.style.display='none'; } catch(e){}
@@ -1177,7 +1462,7 @@ Object.assign(passWrap.style,{
     Object.assign(videoWrap.style,{ width:'100%', height:'100%', position:'relative', display:'none' });
     const vid=document.createElement('video'); 
     vid.src=s7.video; vid.controls=true; 
-    Object.assign(vid.style,{ width:'100%', height:'100%', objectFit:'cover', display:'block' });
+    Object.assign(vid.style,{ width:'100%', height:'100%', objectFit:'contain', display:'block' });
     videoWrap.appendChild(vid);
 
     // Puzzle view (clue message + emoji keyboard + selected sequence + replay)
@@ -1196,7 +1481,7 @@ Object.assign(passWrap.style,{
       minHeight:'36px', display:'flex', alignItems:'center', gap:'6px', margin:'6px 0'
     });
     // Keyboard grid
-    Object.assign(kb.style,{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:'8px', marginTop:'8px' });
+    Object.assign(kb.style,{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:'4px', marginTop:'4px' });
 
     // Replay button (top-right)
     const replay=document.createElement('button'); 
@@ -1272,7 +1557,10 @@ Object.assign(passWrap.style,{
     pwInputP.addEventListener('keydown', e=>{ if(e.key==='Enter') doPhoneUnlock(); });
 
     // Mount into phone screen overlay and show
-    screenP.appendChild(passWrap); screenP.appendChild(content); phoneV.body.appendChild(wrapP);
+    screenP.appendChild(passWrap); screenP.appendChild(content);
+    // Ensure phone view fits without page scroll and is centered
+    try { Object.assign(phoneV.body.style,{ overflow:'hidden', display:'grid', placeItems:'center' }); } catch(e){}
+    phoneV.body.appendChild(wrapP);
     // Ensure layout computes after view becomes visible
     phoneV.onshow = () => { try { typeof sizeEmojiButtons==='function' && sizeEmojiButtons(); } catch(e){} };
   })();
@@ -1284,11 +1572,13 @@ Object.assign(passWrap.style,{
     Object.assign(wrap.style,{
       position:'relative',
       width:'100%',
-      minHeight:'60vh',
+      height:'calc(100vh - 110px)',
       backgroundImage:'url(assets/portraits/portraits.jpg)',
-      backgroundSize:'cover',
+      backgroundSize:'contain',
+      backgroundRepeat:'no-repeat',
       backgroundPosition:'center',
-      overflow:'hidden'
+      overflow:'hidden',
+      backgroundColor:'#000'
     });
 
     const truthful=s8.portraits.findIndex(p=>p.isTruthful);
@@ -1325,7 +1615,11 @@ Object.assign(passWrap.style,{
       applyPos(card, p.pos, i);
 
       card.onclick=()=>{
-        if(i===truthful){
+        // Correct portrait must not be clickable until phone stage is complete
+        if (i===truthful && !state.phone) {
+          return; // no sound, no action
+        }
+        if (i===truthful) {
           state.portraits=true; persist();
           FX.play('success');
           try {
